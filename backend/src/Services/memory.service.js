@@ -1,4 +1,4 @@
-import MemoryRepository from "../repositories/MemoryRepository.js";
+import MemoryRepository from "../Repository/memory.repository.js";
 
 class MemoryService {
   constructor() {

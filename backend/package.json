@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.13.23",
     "chalk": "^5.5.0",
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "express": "^4.18.3",
     "express-rate-limit": "^7.2.0",
