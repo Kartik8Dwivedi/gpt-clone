@@ -1,0 +1,224 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserButton } from "@clerk/nextjs";
+import {
+  Plus,
+  MessageSquare,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Search,
+  Library,
+  Sparkles,
+  Zap,
+  PanelLeftClose,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+interface Conversation {
+  _id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SidebarProps {
+  conversations: Conversation[];
+  activeConversationId: string | null;
+  onSelectConversation: (id: string) => void;
+  onNewConversation: () => void;
+  deleteConversation: (id: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({
+  conversations,
+  activeConversationId,
+  onSelectConversation,
+  onNewConversation,
+  deleteConversation,
+  isOpen,
+  onClose,
+}: SidebarProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+
+  const handleEditStart = (conversation: Conversation) => {
+    setEditingId(conversation._id);
+    setEditTitle(conversation.title);
+  };
+
+  const handleEditSave = () => {
+    // TODO: implement API call to save edited title
+    setEditingId(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditTitle("");
+  };
+
+  const handleDelete = (conversationId: string) => {
+    deleteConversation(conversationId);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#171717] border-r border-[#2f2f2f]">
+      {/* Top bar with new chat + close button */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f]">
+        <Button
+          onClick={onNewConversation}
+          className="flex items-center gap-2 bg-transparent border border-[#4a4a4a] text-white hover:bg-[#2f2f2f] rounded-lg h-9 px-3 text-sm"
+          variant="outline"
+        >
+          <Plus className="w-4 h-4" />
+          New chat
+        </Button>
+        <Button
+          onClick={onClose}
+          size="icon"
+          variant="ghost"
+          className="text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f]"
+        >
+          <PanelLeftClose className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Navigation */}
+      <div className="px-2 py-2 space-y-1">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+        >
+          <Search className="w-4 h-4" />
+          Search chats
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+        >
+          <Library className="w-4 h-4" />
+          Library
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+        >
+          <Sparkles className="w-4 h-4" />
+          Sora
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+        >
+          <Zap className="w-4 h-4" />
+          GPTs
+        </Button>
+      </div>
+
+      {/* Chats */}
+      <div className="px-3 pt-2">
+        <h3 className="text-xs font-medium text-[#888] uppercase tracking-wider mb-2">
+          Chats
+        </h3>
+      </div>
+
+      {/* Scrollable conversation list */}
+      <ScrollArea className="flex-1 px-2">
+        <div className="space-y-1 pb-2">
+          {conversations.map((conversation) => (
+            <div
+              key={conversation._id}
+              className={cn(
+                "group relative flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                activeConversationId === conversation._id
+                  ? "bg-[#2f2f2f] text-white"
+                  : "hover:bg-[#2f2f2f] text-[#b4b4b4] hover:text-white"
+              )}
+              onClick={() => onSelectConversation(conversation._id)}
+            >
+              <MessageSquare className="w-4 h-4 flex-shrink-0" />
+
+              {editingId === conversation._id ? (
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  onBlur={handleEditSave}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleEditSave();
+                    if (e.key === "Escape") handleEditCancel();
+                  }}
+                  className="flex-1 bg-transparent border-none outline-none text-sm text-white"
+                  autoFocus
+                />
+              ) : (
+                <span className="flex-1 text-sm truncate">
+                  {conversation.title}
+                </span>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 hover:bg-[#404040]"
+                  >
+                    <MoreHorizontal className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-[#2f2f2f] border border-[#3a3a3a]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => handleEditStart(conversation)}
+                    className="text-white hover:bg-[#404040]"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleDelete(conversation._id)}
+                    className="text-red-400 hover:bg-[#404040]"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      {/* User Profile */}
+      <div className="p-3 border-t border-[#2f2f2f]">
+        <div className="flex items-center gap-3">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "w-8 h-8",
+                userButtonPopoverCard: "bg-[#2f2f2f] border-[#3a3a3a]",
+                userButtonPopoverActionButton: "text-white hover:bg-[#404040]",
+              },
+            }}
+          />
+          <span className="text-sm text-white">Profile</span>
+        </div>
+      </div>
+    </div>
+  );
+}

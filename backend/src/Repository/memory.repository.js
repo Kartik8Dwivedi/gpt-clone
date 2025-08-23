@@ -13,6 +13,10 @@ class MemoryRepository extends CrudRepository {
   async findByUser(userId) {
     return this.model.find({ userId }).sort({ createdAt: -1 });
   }
+
+  async getForConversation(conversationId) {
+    return this.model.find({ conversationId }).sort({ createdAt: -1 });
+  }
 }
 
 export default MemoryRepository;

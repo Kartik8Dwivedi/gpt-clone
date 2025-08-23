@@ -75,3 +75,9 @@ export const deleteMessage = async (req, res) => {
   logger.info(`Deleting message: ${messageId}`);
   await handleRequest(res, () => chatService.deleteMessage(messageId));
 };
+
+export const deleteConversation = async (req, res) => {
+    const { conversationId } = req.params;
+    logger.info(`Deleting conversation: ${conversationId}`);
+    await handleRequest(res, () => chatService.deleteConversation(conversationId));
+};

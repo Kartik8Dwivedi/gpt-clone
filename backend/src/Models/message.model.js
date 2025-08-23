@@ -7,7 +7,7 @@ const MessageSchema = new mongoose.Schema(
       ref: "Conversation",
       required: true,
     },
-    sender: { type: String, enum: ["user", "ai"], required: true },
+    sender: { type: String, enum: ["user", "ai", "assistant"], required: true },
     content: { type: String, required: true },
     files: [{ type: String }], 
     edited: { type: Boolean, default: false },

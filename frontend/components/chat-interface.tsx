@@ -1,0 +1,103 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useConversations } from "@/hooks/use-conversations";
+import { useMessages } from "@/hooks/use-messages";
+import { Sidebar } from "@/components/sidebar";
+import { ChatArea } from "@/components/chat-area";
+import { Conversation } from "@/lib/types";
+import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import { PanelLeft } from "lucide-react";
+
+export function ChatInterface() {
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const { getToken } = useAuth();
+  const {
+    conversations,
+    isLoading: isLoadingConversations,
+    refreshConversations,
+    createConversation,
+    deleteConversation,
+  } = useConversations();
+  const {
+    messages,
+    isLoading: isLoadingMessages,
+    setMessages,
+    refreshMessages,
+    sendMessage,
+    editMessage,
+    deleteMessage,
+    regenerateMessage,
+  } = useMessages(selectedConversation?._id);
+
+  useEffect(() => {
+    refreshConversations();
+  }, [refreshConversations]);
+
+  const handleSelectConversation = (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+  };
+
+  const handleNewConversation = async () => {
+    try {
+      const newConversation = await createConversation("New Chat");
+      setSelectedConversation(newConversation);
+    } catch (error) {
+      console.error("Failed to create new conversation:", error);
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <Sidebar
+        conversations={conversations}
+        activeConversationId={selectedConversation?._id ?? null}
+        onSelectConversation={(id) => {
+          const conv = conversations.find((c) => c._id === id) || null;
+          setSelectedConversation(conv);
+        }}
+        onNewConversation={handleNewConversation}
+        deleteConversation={deleteConversation}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+
+      {/* Chat Area */}
+      <div className="flex-1 relative flex flex-col">
+        {/* Toggle button (only visible when sidebar is closed) */}
+        {!isSidebarOpen && (
+          <Button
+            onClick={() => setIsSidebarOpen(true)}
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 left-3 z-50 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f]"
+          >
+            <PanelLeft className="w-5 h-5" />
+          </Button>
+        )}
+
+        {/* ChatArea always visible */}
+        <ChatArea
+          conversationId={selectedConversation?._id ?? null}
+          messages={messages}
+          isLoading={isLoadingMessages}
+          onSendMessage={sendMessage}
+          onEditMessage={editMessage}
+          onDeleteMessage={deleteMessage}
+          onRegenerateMessage={regenerateMessage}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+      </div>
+      
+
+      {/* <Toaster /> */}
+    </div>
+  );
+}

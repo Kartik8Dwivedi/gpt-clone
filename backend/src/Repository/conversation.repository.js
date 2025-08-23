@@ -9,6 +9,10 @@ class ConversationRepository extends CrudRepository {
   async findByUser(userId) {
     return this.model.find({ userId }).sort({ updatedAt: -1 });
   }
+
+  async findById(conversationId) {
+    return this.model.findById(conversationId);
+  }
 }
 
 export default ConversationRepository;

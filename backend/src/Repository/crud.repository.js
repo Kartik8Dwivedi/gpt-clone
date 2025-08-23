@@ -311,6 +311,24 @@ class CrudRepository {
       throw error;
     }
   }
+
+  async findById(id) {
+    logger.info(`Attempting to find ${this.model.modelName} record by ID: ${id}.`);
+    try {
+      const result = await this.model.findById(id);
+      if (result) {
+        logger.success(`Found ${this.model.modelName} record by ID: ${id}.`);
+      } else {
+        logger.warn(`${this.model.modelName} record not found by ID: ${id}.`);
+      }
+      return result;
+    } catch (error) {
+      logger.error(
+        `Error finding ${this.model.modelName} record by ID: ${id}. Error: ${error.message}`
+      );
+      throw error;
+    }
+  }
 }
 
 export default CrudRepository;

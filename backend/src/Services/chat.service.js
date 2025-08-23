@@ -75,6 +75,12 @@ class ChatService {
     const deleted = await this.messageRepo.destroy(messageId);
     return { data: deleted, message: "Message deleted successfully" };
   }
+
+  async deleteConversation(conversationId) {
+    await this.conversationRepo.destroy(conversationId);
+    await this.messageRepo.deleteMany({ conversationId });
+    return { message: "Conversation deleted successfully" };
+  }
 }
 
 export default ChatService;
