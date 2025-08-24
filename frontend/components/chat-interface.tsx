@@ -22,7 +22,8 @@ export function ChatInterface() {
     isLoading: isLoadingConversations,
     refreshConversations,
     createConversation,
-    deleteConversation,
+    deleteConversation: deleteConversationFromHook,
+    updateConversation,
   } = useConversations();
   const {
     messages,
@@ -43,12 +44,29 @@ export function ChatInterface() {
     setSelectedConversation(conversation);
   };
 
-  const handleNewConversation = async () => {
-    try {
+  const handleNewConversation = () => {
+    setSelectedConversation(null);
+  };
+
+  const handleSendMessage = async (content: string, files?: string[]) => {
+    let conversationId = selectedConversation?._id;
+
+    if (!conversationId) {
       const newConversation = await createConversation("New Chat");
       setSelectedConversation(newConversation);
-    } catch (error) {
-      console.error("Failed to create new conversation:", error);
+      conversationId = newConversation._id;
+    }
+
+    const updatedConversation = await sendMessage(content, files, conversationId);
+    if (updatedConversation) {
+      updateConversation(updatedConversation);
+    }
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    await deleteConversationFromHook(conversationId);
+    if (selectedConversation?._id === conversationId) {
+      setSelectedConversation(null);
     }
   };
 
@@ -63,7 +81,7 @@ export function ChatInterface() {
           setSelectedConversation(conv);
         }}
         onNewConversation={handleNewConversation}
-        deleteConversation={deleteConversation}
+        deleteConversation={handleDeleteConversation}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
@@ -87,7 +105,7 @@ export function ChatInterface() {
           conversationId={selectedConversation?._id ?? null}
           messages={messages}
           isLoading={isLoadingMessages}
-          onSendMessage={sendMessage}
+          onSendMessage={handleSendMessage}
           onEditMessage={editMessage}
           onDeleteMessage={deleteMessage}
           onRegenerateMessage={regenerateMessage}

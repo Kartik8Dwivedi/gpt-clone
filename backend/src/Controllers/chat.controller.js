@@ -81,3 +81,9 @@ export const deleteConversation = async (req, res) => {
     logger.info(`Deleting conversation: ${conversationId}`);
     await handleRequest(res, () => chatService.deleteConversation(conversationId));
 };
+
+export const regenerateMessage = async (req, res) => {
+    const { conversationId } = req.params;
+    logger.info(`Regenerating message for conversation: ${conversationId}`);
+    await handleRequest(res, () => chatService.regenerateMessage(conversationId, req.body.content));
+};

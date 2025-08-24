@@ -7,6 +7,7 @@ import {
   editMessage,
   deleteMessage,
   deleteConversation,
+  regenerateMessage,
 } from "../../Controllers/chat.controller.js";
 import clerkAuth from "../../Middlewares/clerkAuth.js";
 
@@ -21,5 +22,6 @@ router.delete("/:conversationId/message/:messageId", deleteMessage);
 router.post("/:conversationId/message", addMessage);
 router.get("/:conversationId", getConversation);
 router.delete("/:conversationId", deleteConversation);
+router.post("/:conversationId/regenerate", regenerateMessage);
 
 export default router;

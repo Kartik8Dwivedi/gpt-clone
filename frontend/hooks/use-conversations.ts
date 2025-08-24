@@ -113,11 +113,20 @@ export function useConversations() {
     [getToken, conversations],
   );
 
+  const updateConversation = useCallback((updatedConversation: Conversation) => {
+    if (!isMountedRef.current) return;
+
+    setConversations((prev) =>
+      prev.map((c) => (c._id === updatedConversation._id ? updatedConversation : c))
+    );
+  }, []);
+
   return {
     conversations,
     isLoading,
     refreshConversations,
     createConversation,
     deleteConversation,
+    updateConversation,
   }
 }

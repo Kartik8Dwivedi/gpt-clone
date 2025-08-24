@@ -170,6 +170,23 @@ export async function deleteConversation(conversationId: string, token: string) 
     return response.json();
 }
 
+export async function regenerateMessage(conversationId: string, content: string, token: string) {
+    const response = await fetch(`${API_BASE_URL}/chat/${conversationId}/regenerate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to regenerate message');
+    }
+
+    return response.json();
+}
+
 // File API
 export async function uploadFile(file: File, token: string) {
   // TODO: Implement Uploadcare integration

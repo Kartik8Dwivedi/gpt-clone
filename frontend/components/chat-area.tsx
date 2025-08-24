@@ -120,21 +120,22 @@ export function ChatArea({
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything"
-                className="min-h-[60px] bg-[#303030] border-[#212121] text-white placeholder-[#8e8ea0] resize-none rounded-full pl-6 pr-20 border-2 shadow-lg placeholder:text-base placeholder:opacity-60 placeholder:pt-2"
+                className="min-h-[60px] bg-[#303030] border-[#212121] text-white placeholder-[#8e8ea0] resize-none rounded-full pl-6 pr-20 border-2 shadow-lg placeholder:text-base placeholder:opacity-60 text-base pt-4"
                 disabled={isLoading}
               />
+
               <div className="absolute bottom-3 right-4 flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-2 text-[#8e8ea0] hover:text-white hover:bg-[#565869]"
+                  className="p-2 pt-1 text-[#8e8ea0] hover:text-white hover:bg-[#565869]"
                 >
                   <Paperclip className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-2 text-[#8e8ea0] hover:text-white hover:bg-[#565869]"
+                  className="p-2 pt-1 text-[#8e8ea0] hover:text-white hover:bg-[#565869]"
                 >
                   <Mic className="w-4 h-4" />
                 </Button>
@@ -142,7 +143,7 @@ export function ChatArea({
                   size="sm"
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-2 h-full w-full mb-1 rounded-full transition-colors ${
                     input.trim()
                       ? "bg-white text-black hover:bg-gray-200"
                       : "bg-[#565869] text-[#8e8ea0] cursor-not-allowed"
@@ -172,8 +173,10 @@ export function ChatArea({
       <ScrollArea ref={scrollRef} className="flex-1">
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
           {messages.map((m) =>
-            editingMessageId === m._id ? (
-              <div key={m._id} className="space-y-2">
+            //@ts-ignore
+            editingMessageId === m.id ? (
+              // @ts-ignore
+              <div key={m.id} className="space-y-2">
                 <Textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}

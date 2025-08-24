@@ -34,12 +34,18 @@ class ChatService {
     });
 
     let aiMessage = null;
+    let updatedConversation = null;
 
     if (sender === "user") {
       const conversation = await this.conversationRepo.findById(conversationId);
       const messages = await this.messageRepo.findByConversation(
         conversationId
       );
+
+      if (conversation.title === "New Chat") {
+        const title = await AIService.generateTitle(messages);
+        updatedConversation = await this.conversationRepo.update(conversationId, { title });
+      }
 
       const memory = await this.memoryRepo.getForConversation(conversationId);
 
@@ -58,6 +64,7 @@ class ChatService {
       data: {
         userMessage,
         aiMessage,
+        updatedConversation,
       },
       message: "Message added successfully",
     };
@@ -80,6 +87,24 @@ class ChatService {
     await this.conversationRepo.destroy(conversationId);
     await this.messageRepo.deleteMany({ conversationId });
     return { message: "Conversation deleted successfully" };
+  }
+
+  async regenerateMessage(conversationId, content) {
+    const aiReply = await AIService.generateResponse([{ content: `tell me a better answer for ${content}` }], null);
+
+    const aiMessage = await this.messageRepo.create({
+      conversationId,
+      sender: "assistant",
+      content: aiReply,
+      files: [],
+    });
+
+    return {
+      data: {
+        aiMessage,
+      },
+      message: "Message regenerated successfully",
+    };
   }
 }
 

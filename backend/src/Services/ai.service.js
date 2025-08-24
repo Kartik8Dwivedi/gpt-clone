@@ -15,13 +15,29 @@ class AIService {
         .map((msg) => `${msg.sender}: ${msg.content}`)
         .join("\n");
 
-      const prompt = `${context}\n${userMessages}\nassistant:`;
+      const prompt = `${context}\n${userMessages}\nassistant:`
 
       const result = await this.model.generateContent(prompt);
       return result.response.text();
     } catch (error) {
       console.error("Gemini Error:", error);
       throw new Error("Failed to generate AI response");
+    }
+  }
+
+  async generateTitle(conversationHistory) {
+    try {
+      const userMessages = conversationHistory
+        .map((msg) => `${msg.sender}: ${msg.content}`)
+        .join("\n");
+
+      const prompt = `Based on the following conversation, suggest a short, 2-3 word title for the chat. The title should be descriptive and concise. Examples: \"Sidebar UI refinement\", \"API design discussion\", \"Build and Deploy app\".\n\nConversation:\n${userMessages}\n\nTitle:`
+
+      const result = await this.model.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      throw new Error("Failed to generate title");
     }
   }
 }
