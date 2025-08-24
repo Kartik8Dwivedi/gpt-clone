@@ -87,14 +87,14 @@ export function ChatInterface() {
       />
 
       {/* Chat Area */}
-      <div className="flex-1 relative flex flex-col">
+      <div className="flex-1 flex flex-col relative">
         {/* Toggle button (only visible when sidebar is closed) */}
         {!isSidebarOpen && (
           <Button
             onClick={() => setIsSidebarOpen(true)}
             variant="ghost"
             size="icon"
-            className="absolute top-3 left-3 z-50 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f]"
+            className="fixed top-3 left-3 z-50 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f]"
           >
             <PanelLeft className="w-5 h-5" />
           </Button>

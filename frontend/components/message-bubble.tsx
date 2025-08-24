@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Edit,
@@ -10,6 +10,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Volume2,
+  Bot,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -93,6 +95,38 @@ export function MessageBubble({
   const [feedback, setFeedback] = useState<"liked" | "disliked" | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [displayedContent, setDisplayedContent] = useState("");
+
+  useEffect(() => {
+    console.log("message: ", message)
+    if (
+      message.sender === 'assistant' && 
+      message.isLoading
+    ) {
+      setDisplayedContent("");
+    } else if (
+      message.sender === "assistant" &&
+      !message.isLoading &&
+      new Date().getTime() - new Date(message.createdAt).getTime() < 5000
+    ) {
+      const words = message.content.split(" ");
+      let currentContent = "";
+      let wordIndex = 0;
+      const interval = setInterval(() => {
+        if (wordIndex < words.length) {
+          currentContent += (wordIndex > 0 ? " " : "") + words[wordIndex];
+          setDisplayedContent(currentContent);
+          wordIndex++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    } else {
+      setDisplayedContent(message.content);
+    }
+  }, [message.content, message.sender, message.isLoading]);
 
   useEffect(() => {
     const handleVoicesChanged = () => {
@@ -183,7 +217,7 @@ export function MessageBubble({
                 },
               }}
             >
-              {message.content}
+              {displayedContent}
             </ReactMarkdown>
           )}
 

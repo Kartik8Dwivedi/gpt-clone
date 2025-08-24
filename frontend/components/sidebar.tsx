@@ -72,10 +72,8 @@ export function Sidebar({
     deleteConversation(conversationId);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#171717] border-r border-[#2f2f2f]">
+    <div className={cn("relative flex flex-col bg-[#171717] border-r border-[#2f2f2f] transition-all duration-300 overflow-hidden", isOpen ? "w-64" : "w-0")}>
       {/* Top bar with new chat + close button */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f]">
         <Button
