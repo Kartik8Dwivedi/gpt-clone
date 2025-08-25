@@ -50,6 +50,7 @@ export function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
 
@@ -59,7 +60,6 @@ export function Sidebar({
   };
 
   const handleEditSave = () => {
-    // TODO: implement API call to save edited title
     setEditingId(null);
   };
 
@@ -71,152 +71,170 @@ export function Sidebar({
   const handleDelete = (conversationId: string) => {
     deleteConversation(conversationId);
   };
-
+  console.log("CONVERSATIONS:::", conversations);
   return (
-    <div className={cn("relative flex flex-col bg-[#171717] border-r border-[#2f2f2f] transition-all duration-300 overflow-hidden", isOpen ? "w-64" : "w-0")}>
-      {/* Top bar with new chat + close button */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f]">
-        <Button
-          onClick={onNewConversation}
-          className="flex items-center gap-2 bg-transparent border border-[#4a4a4a] text-white hover:bg-[#2f2f2f] rounded-lg h-9 px-3 text-sm"
-          variant="outline"
-        >
-          <Plus className="w-4 h-4" />
-          New chat
-        </Button>
-        <Button
+    <>
+      {/* Backdrop for mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
           onClick={onClose}
-          size="icon"
-          variant="ghost"
-          className="text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f]"
-        >
-          <PanelLeftClose className="w-5 h-5" />
-        </Button>
-      </div>
+        />
+      )}
 
-      {/* Navigation */}
-      <div className="px-2 py-2 space-y-1">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
-        >
-          <Search className="w-4 h-4" />
-          Search chats
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
-        >
-          <Library className="w-4 h-4" />
-          Library
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
-        >
-          <Sparkles className="w-4 h-4" />
-          Sora
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
-        >
-          <Zap className="w-4 h-4" />
-          GPTs
-        </Button>
-      </div>
+      <div
+        className={cn(
+          "fixed lg:relative z-50 lg:z-auto h-full flex flex-col bg-[#171717] border-r border-[#2f2f2f] transition-all duration-300 overflow-hidden",
+          isOpen ? "w-64" : "w-0 lg:w-64"
+        )}
+      >
+        {/* Top bar with new chat + close button */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#2f2f2f]">
+          <Button
+            onClick={onNewConversation}
+            className="flex items-center gap-2 bg-transparent border border-[#4a4a4a] text-white hover:bg-[#2f2f2f] rounded-lg h-9 px-3 text-sm"
+            variant="outline"
+          >
+            <Plus className="w-4 h-4" />
+            New chat
+          </Button>
+          <Button
+            onClick={onClose}
+            size="icon"
+            variant="ghost"
+            className="text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] lg:hidden"
+          >
+            <PanelLeftClose className="w-5 h-5" />
+          </Button>
+        </div>
 
-      {/* Chats */}
-      <div className="px-3 pt-2">
-        <h3 className="text-xs font-medium text-[#888] uppercase tracking-wider mb-2">
-          Chats
-        </h3>
-      </div>
+        {/* Navigation */}
+        <div className="px-2 py-2 space-y-1">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+          >
+            <Search className="w-4 h-4" />
+            Search chats
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+          >
+            <Library className="w-4 h-4" />
+            Library
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+          >
+            <Sparkles className="w-4 h-4" />
+            Sora
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-[#b4b4b4] hover:text-white hover:bg-[#2f2f2f] h-9"
+          >
+            <Zap className="w-4 h-4" />
+            GPTs
+          </Button>
+        </div>
 
-      {/* Scrollable conversation list */}
-      <ScrollArea className="flex-1 px-2">
-        <div className="space-y-1 pb-2">
-          {conversations.map((conversation) => (
-            <div
-              key={conversation._id}
-              className={cn(
-                "group relative flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors",
-                activeConversationId === conversation._id
-                  ? "bg-[#2f2f2f] text-white"
-                  : "hover:bg-[#2f2f2f] text-[#b4b4b4] hover:text-white"
-              )}
-              onClick={() => onSelectConversation(conversation._id)}
-            >
-              <MessageSquare className="w-4 h-4 flex-shrink-0" />
+        {/* Chats */}
+        <div className="px-3 pt-2">
+          <h3 className="text-xs font-medium text-[#888] uppercase tracking-wider mb-2">
+            Chats
+          </h3>
+        </div>
 
-              {editingId === conversation._id ? (
-                <input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  onBlur={handleEditSave}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleEditSave();
-                    if (e.key === "Escape") handleEditCancel();
-                  }}
-                  className="flex-1 bg-transparent border-none outline-none text-sm text-white"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1 text-sm truncate">
-                  {conversation.title}
-                </span>
-              )}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 hover:bg-[#404040]"
-                  >
-                    <MoreHorizontal className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-[#2f2f2f] border border-[#3a3a3a]"
+        {/* Scrollable conversation list */}
+        <ScrollArea className="flex-1 px-2">
+          <div className="space-y-1 pb-2">
+            {[...conversations]
+              .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+              .map((conversation) => (
+                <div
+                  key={conversation._id}
+                  className={cn(
+                    "group relative flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                    activeConversationId === conversation._id
+                      ? "bg-[#2f2f2f] text-white"
+                      : "hover:bg-[#2f2f2f] text-[#b4b4b4] hover:text-white"
+                  )}
+                  onClick={() => onSelectConversation(conversation._id)}
                 >
-                  <DropdownMenuItem
-                    onClick={() => handleEditStart(conversation)}
-                    className="text-white hover:bg-[#404040]"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Rename
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleDelete(conversation._id)}
-                    className="text-red-400 hover:bg-[#404040]"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+                  <MessageSquare className="w-4 h-4 flex-shrink-0" />
 
-      {/* User Profile */}
-      <div className="p-3 border-t border-[#2f2f2f]">
-        <div className="flex items-center gap-3">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "w-8 h-8",
-                userButtonPopoverCard: "bg-[#2f2f2f] border-[#3a3a3a]",
-                userButtonPopoverActionButton: "text-white hover:bg-[#404040]",
-              },
-            }}
-          />
-          <span className="text-sm text-white">Profile</span>
+                  {editingId === conversation._id ? (
+                    <input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onBlur={handleEditSave}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleEditSave();
+                        if (e.key === "Escape") handleEditCancel();
+                      }}
+                      className="flex-1 bg-transparent border-none outline-none text-sm text-white"
+                      autoFocus
+                    />
+                  ) : (
+                    <span className="flex-1 text-sm truncate">
+                      {conversation.title}
+                    </span>
+                  )}
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 hover:bg-[#404040]"
+                      >
+                        <MoreHorizontal className="w-3 h-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-[#2f2f2f] border border-[#3a3a3a]"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => handleEditStart(conversation)}
+                        className="text-white hover:bg-[#404040]"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDelete(conversation._id)}
+                        className="text-red-400 hover:bg-[#404040]"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ))}
+          </div>
+        </ScrollArea>
+
+        {/* User Profile */}
+        <div className="p-3 border-t border-[#2f2f2f]">
+          <div className="flex items-center gap-3">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                  userButtonPopoverCard: "bg-[#2f2f2f] border-[#3a3a3a]",
+                  userButtonPopoverActionButton:
+                    "text-white hover:bg-[#404040]",
+                },
+              }}
+            />
+            <span className="text-sm text-white">Profile</span>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

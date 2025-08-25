@@ -70,16 +70,19 @@ export async function POST(
   const { content, files } = body;
 
   try {
-    // 1️⃣ Save user’s message in DB
-    await chatService.addMessage(
-      userId,
-      conversationId,
-      "user",
-      content,
-      files
-    );
+    const { content, files, sender } = body;
 
-    // Fetch conversation history
+    if (sender === "user") {
+      // 1️⃣ Save user’s message in DB
+      await chatService.addMessage(
+        userId,
+        conversationId,
+        "user",
+        content,
+        files
+      );
+
+      // Fetch conversation history
       const conversation = await chatService.getConversation(new Types.ObjectId(conversationId));
       console.log("Conversation fetched in the controller: ", conversation);
       if (!conversation?.data) {
@@ -100,8 +103,21 @@ export async function POST(
       // Add the current user message (which was just saved)
       messages.push({ role: "user", content });
 
-    // 3️⃣ Stream assistant reply with Vercel AI SDK
-    return chatService.streamAssistantReply(messages, request);
+      // 3️⃣ Stream assistant reply with Vercel AI SDK
+      return chatService.streamAssistantReply(messages, request);
+    } else if (sender === "assistant") {
+      // Save assistant message to DB after streaming is complete
+      await chatService.addMessage(
+        userId,
+        conversationId,
+        "assistant",
+        content,
+        files
+      );
+      return NextResponse.json(new AppSuccess(null, "Assistant message saved", 200), { status: 200 });
+    } else {
+      return NextResponse.json(new AppError("Invalid sender type", 400), { status: 400 });
+    }
   } catch (error: any) {
     const errorResponse = new AppError(
       error.message || "Something went wrong",

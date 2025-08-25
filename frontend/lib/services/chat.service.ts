@@ -85,68 +85,39 @@ class ChatService {
     sender: "user" | "ai" | "assistant",
     content: string,
     files: string[] = []
-  ): Promise<AsyncIterable<string>> {
+  ): Promise<{ data: IMessage; message: string }> {
     try {
-      // Normalize ObjectId
       const convId =
         typeof conversationId === "string"
           ? new Types.ObjectId(conversationId)
           : conversationId;
-      // Build the message payload safely
-      //@ts-ignore
-      const messagePayload: Partial<IMessage> = {
+
+      const messagePayload = {
         conversationId: convId,
-        sender: sender,
-        content: content?.toString() ?? "",
-        files: Array.isArray(files) ? files : [],
-        userId: userId,
+        sender,
+        content,
+        files,
+        userId,
       };
-      logger.info(
-        "Attempting to create new Message record with:",
-        messagePayload
-      );
 
-      // Validate required fields before calling repo
-      if (!messagePayload.conversationId)
-        throw new Error("conversationId is required");
-      if (!messagePayload.sender) throw new Error("sender is required");
-      if (!messagePayload.content || messagePayload.content.trim() === "")
-        throw new Error("content is required");
+      const message = await this.messageRepo.create(messagePayload);
 
-      const userMessage = await this.messageRepo.create(messagePayload);
-
-      let aiMessage: IMessage | null = null;
-      let updatedConversation: IConversation | null = null;
-
+      // If the conversation is new, generate a title
       if (sender === "user") {
         const conversation = await this.conversationRepo.findById(convId);
-        if (!conversation) throw new Error("Conversation not found");
-
-        const messages = await this.messageRepo.findByConversation(convId);
-
-        if (conversation.title === "New Chat") {
+        if (conversation && conversation.title === "New Chat") {
+          const messages = await this.messageRepo.findByConversation(convId);
           const title = await AIService.generateTitle(
             messages.map((msg) => ({
               sender: msg.sender,
               content: msg.content,
             }))
           );
-
-          updatedConversation = await this.conversationRepo.update(
-            convId.toString(),
-            {
-              title,
-            }
-          );
+          await this.conversationRepo.update(convId.toString(), { title });
         }
-
-        // Generate AI response
-        return AIService.generateResponse(
-          String(userId),
-          String(convId),
-          content
-        );
       }
+
+      return { data: message, message: "Message added successfully" };
     } catch (error: any) {
       logger.error("Error adding message:", error.message);
       throw error;
