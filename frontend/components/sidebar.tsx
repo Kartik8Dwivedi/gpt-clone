@@ -71,7 +71,6 @@ export function Sidebar({
   const handleDelete = (conversationId: string) => {
     deleteConversation(conversationId);
   };
-  console.log("CONVERSATIONS:::", conversations);
   return (
     <>
       {/* Backdrop for mobile */}

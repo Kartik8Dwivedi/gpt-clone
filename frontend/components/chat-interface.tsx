@@ -46,21 +46,24 @@ export function ChatInterface() {
       setMessages([]);
       return;
     }
-    if (isStreaming) return;
-    if (!historyMessages || historyMessages.length === 0) return;
 
-    const dbMessagesAsUiMessages: CustomMessage[] = historyMessages.map(
-      (m) => ({
-        id: m._id,
-        role: m.sender === "user" ? "user" : "assistant",
-        content: m.content,
-        createdAt: new Date(m.createdAt),
-        isLoading: false,
-      })
-    );
+    if (isStreaming) return;
+
+    if (historyMessages === undefined || historyMessages === null) {
+      return; 
+    }
+
+    const dbMessagesAsUiMessages: CustomMessage[] = historyMessages.map((m) => ({
+      id: m._id,
+      role: m.sender === "user" ? "user" : "assistant",
+      content: m.content,
+      createdAt: new Date(m.createdAt),
+      isLoading: false,
+    }));
 
     setMessages(dbMessagesAsUiMessages);
   }, [historyMessages, selectedConversation, setMessages, isStreaming]);
+
 
   // const handleSendMessage = async (content: string, files?: string[]) => {
   //   let conversationId = selectedConversation?._id;
@@ -377,6 +380,8 @@ const handleSendMessage = async (content: string, files?: string[]) => {
       typingInterval = null;
     }
     setIsStreaming(false);
+    // after final save of assistant message
+    await Promise.all([refreshMessages(), refreshConversations()]);
   }
 };
 
@@ -386,11 +391,13 @@ const handleSendMessage = async (content: string, files?: string[]) => {
     refreshConversations();
   }, [refreshConversations]);
 
-  const handleNewConversation = async () => {
-    const newConv = await createConversation("New Chat");
-    setSelectedConversation(newConv);
-    refreshConversations();
-  };
+const handleNewConversation = async () => {
+  // await createConversation("New Chat");
+  refreshConversations();
+  setSelectedConversation(null);
+  setMessages([]);
+};
+
 
   const handleDeleteConversation = async (id: string) => {
     await deleteConversationFromHook(id);

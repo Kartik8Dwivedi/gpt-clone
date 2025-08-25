@@ -117,6 +117,10 @@ class ChatService {
         }
       }
 
+      await this.conversationRepo.findByIdAndUpdate(convId, {
+        $set: { updatedAt: new Date() }
+      });
+
       return { data: message, message: "Message added successfully" };
     } catch (error: any) {
       logger.error("Error adding message:", error.message);
