@@ -6,6 +6,7 @@ export interface IMessage extends Document {
   content: string;
   files?: string[];
   edited: boolean;
+  userId: string;
 }
 
 const MessageSchema: Schema = new Schema(
@@ -19,6 +20,7 @@ const MessageSchema: Schema = new Schema(
     content: { type: String, required: true },
     files: [{ type: String }],
     edited: { type: Boolean, default: false },
+    userId: { type: String, required: true },
   },
   { timestamps: true }
 );

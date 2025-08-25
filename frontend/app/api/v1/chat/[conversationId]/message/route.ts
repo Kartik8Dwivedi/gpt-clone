@@ -5,7 +5,7 @@ import AppError from "@/lib/utils/AppError";
 import AppSuccess from "@/lib/utils/AppSuccess";
 import logger from "@/lib/logger";
 import connectToDB from "@/lib/db";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const chatService = new ChatService();
 
@@ -46,6 +46,73 @@ const handleRequest = async (
   }
 };
 
+export async function POST(
+  request: Request,
+  { params }: { params: { conversationId: string } }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(new AppError("Unauthorized", 401), {
+      status: 401,
+    });
+  }
+
+  const { conversationId } = params;
+  if (!Types.ObjectId.isValid(conversationId)) {
+    return NextResponse.json(new AppError("Invalid Conversation ID", 400), {
+      status: 400,
+    });
+  }
+
+  await connectToDB();
+
+  const body = await request.json();
+  const { content, files } = body;
+
+  try {
+    // 1️⃣ Save user’s message in DB
+    await chatService.addMessage(
+      userId,
+      conversationId,
+      "user",
+      content,
+      files
+    );
+
+    // Fetch conversation history
+      const conversation = await chatService.getConversation(new Types.ObjectId(conversationId));
+      console.log("Conversation fetched in the controller: ", conversation);
+      if (!conversation?.data) {
+        throw new AppError("Conversation not found or no messages", 404);
+      }
+
+      const history = conversation.data;
+
+      // Build messages for Gemini, including history
+      const messages = [{ role: "system", content: "You are a helpful assistant." }];
+
+      history.forEach((msg: any) => {
+        if (msg.sender === "user" || msg.sender === "assistant") {
+          messages.push({ role: msg.sender, content: msg.content });
+        }
+      });
+
+      // Add the current user message (which was just saved)
+      messages.push({ role: "user", content });
+
+    // 3️⃣ Stream assistant reply with Vercel AI SDK
+    return chatService.streamAssistantReply(messages, request);
+  } catch (error: any) {
+    const errorResponse = new AppError(
+      error.message || "Something went wrong",
+      error.statusCode || 500
+    );
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { conversationId: string } }
@@ -71,46 +138,11 @@ export async function GET(
   );
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: { conversationId: string } }
-) {
-  const { userId } = await auth();
-  if (!userId) {
-    logger.warn("Unauthorized request to add message.");
-    return NextResponse.json(new AppError("Unauthorized", 401), {
-      status: 401,
-    });
-  }
-
-  const { conversationId } = params;
-  if (!Types.ObjectId.isValid(conversationId)) {
-    return NextResponse.json(new AppError("Invalid Conversation ID", 400), {
-      status: 400,
-    });
-  }
-
-  const body = await request.json();
-  const { content, files } = body;
-
-  logger.info(`Adding message to conversation: ${conversationId}`);
-  return handleRequest(
-    () =>
-      chatService.addMessage(
-        new Types.ObjectId(conversationId),
-        "user",
-        content,
-        files
-      ),
-    201
-  );
-}
-
 export async function DELETE(
   request: Request,
   { params }: { params: { conversationId: string } }
 ) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     logger.warn("Unauthorized request to delete conversation.");
     return NextResponse.json(new AppError("Unauthorized", 401), {

@@ -95,38 +95,7 @@ export function MessageBubble({
   const [feedback, setFeedback] = useState<"liked" | "disliked" | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [displayedContent, setDisplayedContent] = useState("");
-
-  useEffect(() => {
-    console.log("message: ", message)
-    if (
-      message.sender === 'assistant' && 
-      message.isLoading
-    ) {
-      setDisplayedContent("");
-    } else if (
-      message.sender === "assistant" &&
-      !message.isLoading &&
-      new Date().getTime() - new Date(message.createdAt).getTime() < 5000
-    ) {
-      const words = message.content.split(" ");
-      let currentContent = "";
-      let wordIndex = 0;
-      const interval = setInterval(() => {
-        if (wordIndex < words.length) {
-          currentContent += (wordIndex > 0 ? " " : "") + words[wordIndex];
-          setDisplayedContent(currentContent);
-          wordIndex++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 50);
-
-      return () => clearInterval(interval);
-    } else {
-      setDisplayedContent(message.content);
-    }
-  }, [message.content, message.sender, message.isLoading]);
+  
 
   useEffect(() => {
     const handleVoicesChanged = () => {
@@ -217,7 +186,7 @@ export function MessageBubble({
                 },
               }}
             >
-              {displayedContent}
+              {message.content}
             </ReactMarkdown>
           )}
 

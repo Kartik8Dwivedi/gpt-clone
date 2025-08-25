@@ -81,7 +81,7 @@ export async function POST(request: Request, { params }: { params: { conversatio
 }
 
 export async function DELETE(request: Request, { params }: { params: { conversationId: string } }) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     logger.warn("Unauthorized request to delete conversation.");
     return NextResponse.json(new AppError("Unauthorized", 401), { status: 401 });
@@ -98,7 +98,7 @@ export async function DELETE(request: Request, { params }: { params: { conversat
 
 // Regenerate message (POST to a specific conversation ID)
 export async function PUT(request: Request, { params }: { params: { conversationId: string } }) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) {
     logger.warn("Unauthorized request to regenerate message.");
     return NextResponse.json(new AppError("Unauthorized", 401), { status: 401 });
