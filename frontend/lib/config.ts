@@ -11,6 +11,7 @@ interface AppConfig {
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_API_SECRET: string;
   GEMINI_API_KEY: string;
+  MEM0_API_KEY: string;
 }
 
 const AppConfig: AppConfig = {
@@ -25,6 +26,7 @@ const AppConfig: AppConfig = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+  MEM0_API_KEY: process.env.MEM0_API_KEY || "",
 };
 
 export default AppConfig;
