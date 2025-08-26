@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Menu, Send, Mic, ArrowDown, ArrowUp } from "lucide-react";
+import { Menu, Send, Mic, ArrowDown, ArrowUp, Paperclip } from "lucide-react";
 import { MessageBubble } from "@/components/message-bubble";
 import { FileUpload } from "@/components/file-upload";
 
@@ -186,9 +186,10 @@ export function ChatArea({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-2 pt-1 text-[#8e8ea0] hover:text-white hover:bg-[#565869]"
+                  className="mb-1 text-[#8e8ea0] hover:text-white hover:bg-[#565869] rounded-full flex justify-center items-center"
                 >
-                  <Mic className="w-4 h-4" />
+                  {/* <Mic className="w-4 h-4" /> */}
+                  <Paperclip className="w-4 h-4" />
                 </Button>
                 <Button
                   size="sm"

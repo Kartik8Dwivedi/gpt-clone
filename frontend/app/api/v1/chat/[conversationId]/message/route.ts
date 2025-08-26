@@ -73,7 +73,6 @@ export async function POST(
     const { content, files, sender } = body;
 
     if (sender === "user") {
-      // 1️⃣ Save user’s message in DB
       await chatService.addMessage(
         userId,
         conversationId,

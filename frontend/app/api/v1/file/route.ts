@@ -5,6 +5,8 @@ import AppError from '@/lib/utils/AppError';
 import AppSuccess from '@/lib/utils/AppSuccess';
 import logger from '@/lib/logger';
 import connectToDB from '@/lib/db';
+import FileRepository from "@/lib/repositories/file.repository";
+import cloudinary from "@/lib/utils/cloudinary";
 
 const fileService = new FileService();
 
@@ -42,20 +44,88 @@ const handleRequest = async (
 };
 
 export async function POST(request: Request) {
-  const { userId } = auth();
-  if (!userId) {
-    logger.warn("Unauthorized request to upload file.");
-    return NextResponse.json(new AppError("Unauthorized", 401), { status: 401 });
+  try {
+    const { userId } = auth();
+    if (!userId) throw new AppError("Unauthorized", 401);
+
+    const contentType = request.headers.get("content-type") || "";
+
+    // ---- New: handle real files (multipart) ----
+    if (contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      const blobs = form.getAll("files");
+      if (!blobs.length) throw new AppError("No files provided", 400);
+
+      const fileRepo = new FileRepository();
+      const saved: any[] = [];
+
+      for (const blob of blobs) {
+        if (!(blob instanceof File)) continue;
+
+        const arrayBuffer = await blob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const uploaded: any = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              resource_type: "auto",
+              folder: "uploads",
+              use_filename: true,
+              filename_override: blob.name,
+            },
+            (err, res) => (err ? reject(err) : resolve(res))
+          );
+          stream.end(buffer);
+        });
+
+        const doc = await fileRepo.create({
+          userId,
+          url: uploaded.secure_url,
+          type: blob.type,
+          size: blob.size,
+          name: uploaded.original_filename,
+          originalName: blob.name,
+          metadata: uploaded,
+        });
+        saved.push(doc);
+      }
+
+      return NextResponse.json(new AppSuccess("Files uploaded", saved), {
+        status: 201,
+      });
+    }
+
+    // ---- Existing JSON body path (kept) ----
+    const body = await request.json();
+    const { path, type, size, name, originalName } = body || {};
+    if (!path || !type || !size)
+      throw new AppError("Missing file data (path/type/size)", 400);
+
+    const uploaded = await cloudinary.uploader.upload(path, {
+      resource_type: "auto",
+    });
+
+    const fileRepo = new FileRepository();
+    const file = await fileRepo.create({
+      userId,
+      url: uploaded.secure_url,
+      type,
+      size,
+      name: name || uploaded.original_filename,
+      originalName: originalName || uploaded.original_filename,
+      metadata: uploaded,
+    });
+
+    return NextResponse.json(new AppSuccess("File uploaded", file), {
+      status: 201,
+    });
+  } catch (error: any) {
+    const status = error.statusCode || 500;
+    return NextResponse.json(
+      new AppError(error.message || "Failed to upload file", status),
+      { status }
+    );
   }
-
-  const body = await request.json();
-  const { path, type, size } = body; // assuming Uploadcare gives file path/url
-
-  logger.info(`User ${userId} uploading file...`);
-  return handleRequest(
-    () => fileService.uploadFile(userId, path, type, size),
-    201
-  );
 }
 
 export async function GET(request: Request) {

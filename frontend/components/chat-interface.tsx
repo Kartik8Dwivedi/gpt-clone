@@ -61,171 +61,25 @@ export function ChatInterface() {
       isLoading: false,
     }));
 
-    setMessages(dbMessagesAsUiMessages);
+    // setMessages(dbMessagesAsUiMessages);
+    setMessages((prev) => {
+      // keep UI messages that aren’t in DB yet
+      const dbIds = new Set(dbMessagesAsUiMessages.map((m) => m.id));
+      const filteredPrev = prev.filter(
+        (m) =>
+          !m.id.startsWith("temp-") ||
+          !dbMessagesAsUiMessages.some(
+            (dbm) => dbm.role === m.role && dbm.content === m.content
+          )
+      );
+      return [
+        ...dbMessagesAsUiMessages,
+        ...filteredPrev.filter((m) => !dbIds.has(m.id)),
+      ];
+
+    });
+
   }, [historyMessages, selectedConversation, setMessages, isStreaming]);
-
-
-  // const handleSendMessage = async (content: string, files?: string[]) => {
-  //   let conversationId = selectedConversation?._id;
-
-  //   if (!conversationId) {
-  //     const newConv = await createConversation("New Chat");
-  //     if (!newConv) {
-  //       console.error("Failed to create conversation");
-  //       return;
-  //     }
-  //     setSelectedConversation(newConv);
-  //     conversationId = newConv._id;
-  //     refreshConversations();
-  //   }
-
-  //   const userMessage: CustomMessage = {
-  //     id: crypto.randomUUID(),
-  //     role: "user",
-  //     content,
-  //   };
-  //   setMessages((prev: CustomMessage[]) => [...prev, userMessage]);
-
-  //   const response = await fetch(`/api/v1/chat/${conversationId}/message`, {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ content, files, sender: "user" }),
-  //   });
-
-  //   if (!response.ok) {
-  //     const errorData = await response.json();
-  //     console.error("Error saving user message:", errorData);
-  //     toast.error(errorData.error || "Failed to send message.");
-  //     setMessages((prev: CustomMessage[]) =>
-  //       prev.filter((m) => m.id !== userMessage.id)
-  //     );
-  //     return;
-  //   }
-  //   if (!response.body) {
-  //     console.error("Response has no body");
-  //     return;
-  //   }
-
-  //   const reader = response.body.getReader();
-  //   const decoder = new TextDecoder();
-  //   const assistantId = crypto.randomUUID();
-
-  //   setIsStreaming(true);
-
-  //   // Add a placeholder assistant message
-  //   setMessages((prev: CustomMessage[]) => [
-  //     ...prev,
-  //     { id: assistantId, role: "assistant", content: "", isLoading: true },
-  //   ]);
-
-  //   try {
-  //     let buffer = "";
-  //     let typingInterval: NodeJS.Timeout | null = null;
-  //     let fullResponse = "";
-
-  //     while (true) {
-  //       const { done, value } = await reader.read();
-
-  //       // If stream done
-  //       if (done) {
-  //         // stop interval if running
-  //         if (typingInterval) {
-  //           clearInterval(typingInterval);
-  //           typingInterval = null;
-  //         }
-
-  //         // flush any remaining buffered chars into UI & fullResponse
-  //         if (buffer.length > 0) {
-  //           const remaining = buffer;
-  //           buffer = "";
-
-  //           setMessages((prev: CustomMessage[]) =>
-  //             prev.map((m) =>
-  //               m.id === assistantId
-  //                 ? { ...m, content: (m.content || "") + remaining }
-  //                 : m
-  //             )
-  //           );
-  //           fullResponse += remaining;
-  //         }
-
-  //         // mark assistant message finished loading in UI
-  //         setMessages((prev: CustomMessage[]) =>
-  //           prev.map((m) =>
-  //             m.id === assistantId ? { ...m, isLoading: false } : m
-  //           )
-  //         );
-
-  //         // Save final assembled assistant message once (only once)
-  //         try {
-  //           const saveResp = await fetch(
-  //             `/api/v1/chat/${conversationId}/message`,
-  //             {
-  //               method: "POST",
-  //               headers: { "Content-Type": "application/json" },
-  //               body: JSON.stringify({
-  //                 sender: "assistant",
-  //                 content: fullResponse,
-  //               }),
-  //             }
-  //           );
-
-  //           if (!saveResp.ok) {
-  //             const errJson = await saveResp.json().catch(() => null);
-  //             console.error("Failed to save assistant message", errJson);
-  //           }
-  //         } catch (err) {
-  //           console.error("Error saving assistant message:", err);
-  //         }
-
-  //         break;
-  //       }
-
-  //       // decode chunk and append to buffer
-  //       const chunkText = decoder.decode(value, { stream: true });
-  //       buffer += chunkText;
-
-  //       // start interval if not started
-  //       if (!typingInterval) {
-  //         typingInterval = setInterval(() => {
-  //           if (buffer.length === 0) return;
-
-  //           const nextChar = buffer[0];
-  //           buffer = buffer.slice(1);
-  //           fullResponse += nextChar;
-
-  //           // append single char to UI message
-  //           setMessages((prev: CustomMessage[]) =>
-  //             prev.map((m) =>
-  //               m.id === assistantId
-  //                 ? { ...m, content: (m.content || "") + nextChar }
-  //                 : m
-  //             )
-  //           );
-
-  //           // only auto-scroll if user is near bottom
-  //           const container = scrollContainerRef.current;
-  //           if (container) {
-  //             const isNearBottom =
-  //               container.scrollHeight -
-  //                 container.scrollTop -
-  //                 container.clientHeight <
-  //               80;
-  //             if (isNearBottom) {
-  //               container.scrollTop = container.scrollHeight;
-  //             }
-  //           }
-  //         }, 25); // typing speed: ms per char
-  //       }
-  //     }
-
-  //     // after stream completes, refresh server-side messages & conversations
-  //     await Promise.all([refreshMessages(), refreshConversations()]);
-  //   } finally {
-  //     setIsStreaming(false);
-  //   }
-  // };
-
 
 const handleSendMessage = async (content: string, files?: string[]) => {
   let conversationId = selectedConversation?._id;
@@ -242,8 +96,9 @@ const handleSendMessage = async (content: string, files?: string[]) => {
   }
 
   // optimistic user message
+  const tempId = "temp-" + Date.now();
   const userMessage: CustomMessage = {
-    id: crypto.randomUUID(),
+    id: tempId,
     role: "user",
     content,
   };
@@ -283,7 +138,7 @@ const handleSendMessage = async (content: string, files?: string[]) => {
   ]);
 
   // typing queue & interval
-  const TYPING_MS = 25; // ms per char — tweak as needed
+  const TYPING_MS = 80; // ms per char — tweak as needed
   const charQueue: string[] = [];
   let fullResponse = "";
   let typingInterval: ReturnType<typeof setInterval> | null = null;
@@ -382,6 +237,7 @@ const handleSendMessage = async (content: string, files?: string[]) => {
     setIsStreaming(false);
     // after final save of assistant message
     await Promise.all([refreshMessages(), refreshConversations()]);
+    // await refreshConversations();
   }
 };
 
@@ -429,10 +285,11 @@ const handleNewConversation = async () => {
         deleteConversation={handleDeleteConversation}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        onToggle={() => setIsSidebarOpen(true)}
       />
 
       <div className="flex-1 flex flex-col relative">
-        {!isSidebarOpen && (
+        {/* {!isSidebarOpen && (
           <Button
             onClick={() => setIsSidebarOpen(true)}
             variant="ghost"
@@ -441,7 +298,7 @@ const handleNewConversation = async () => {
           >
             <PanelLeft className="w-5 h-5" />
           </Button>
-        )}
+        )} */}
 
         <ChatArea
           scrollRef={scrollContainerRef}
