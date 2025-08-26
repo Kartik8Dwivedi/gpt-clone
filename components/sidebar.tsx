@@ -103,7 +103,7 @@ export function Sidebar({
       <div
         className={cn(
           "fixed lg:relative z-50 lg:z-auto h-full flex flex-col bg-[#171717] border-r border-[#2f2f2f] transition-all duration-300 overflow-hidden",
-          isOpen ? "w-64" : "w-20"
+          isOpen ? "w-64" : "w-0 lg:w-20 lg:min-w-[5rem]"
         )}
       >
         {/* TOP AREA */}
